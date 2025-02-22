@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from database360.config.loader import ConfigurationLoader
+from database360.probe_catalog.probe import probe_resources
 
 def main():
     """Main entry point for the application."""
@@ -23,6 +24,18 @@ def main():
     print("\nResources Configuration:")
     for resource in resources:
         print(resource)
+        
+    # Probe catalog for each resource
+    catalog_search_url = institution_config.get('Catalog Search URL')
+    if catalog_search_url:
+        print("\nProbing catalog for resources...")
+        probed_resources = probe_resources(catalog_search_url, resources)
+        for resource in probed_resources:
+            print(f"\nDatabase: {resource.get('Database Name')}")
+            if 'catalog_link' in resource:
+                print(f"Catalog Link: {resource['catalog_link']}")
+            else:
+                print("No catalog link found")
 
 if __name__ == "__main__":
     main()
