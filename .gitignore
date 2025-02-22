@@ -1,0 +1,13 @@
+# Institution-specific data
+institution_data/Configuration.xlsx
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual Environment
+venv/
+
+# Testing
+.pytest_cache/
