@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from database360.config.loader import ConfigurationLoader
-from database360.probe_catalog.probe import probe_resources
+from database360.probe_catalog.probe import probe_resource
 
 def main():
     """Main entry point for the application."""
@@ -11,31 +11,31 @@ def main():
     config_file = project_root / 'institution_data' / 'Configuration.xlsx'
     
     # Initialize configuration loader
-    loader = ConfigurationLoader(config_file)
+    config_loader = ConfigurationLoader(config_file)
     
-    # Load institution configuration
-    institution_config = loader.load_institution_config()
+    # Load configurations
+    institution_config = config_loader.load_institution_config()
+    resources = config_loader.load_resources()
+    
     print("\nInstitution Configuration:")
-    for key, value in institution_config.items():
-        print(f"{key}: {value}")
+    print(f"Catalog Search URL: {institution_config['catalog_search_url']}\n")
     
-    # Load resources
-    resources = loader.load_resources()
-    print("\nResources Configuration:")
+    print("Resources Configuration:")
     for resource in resources:
         print(resource)
+    
+    print("\nProbing catalog for resources...")
+    probed_resources = []
+    
+    for i, resource in enumerate(resources, 1):
+        database_name = resource.get('Database Name', 'Unknown')
+        print(f"\nProcessing {i}/{len(resources)}: {database_name}")
         
-    # Probe catalog for each resource
-    catalog_search_url = institution_config.get('Catalog Search URL')
-    if catalog_search_url:
-        print("\nProbing catalog for resources...")
-        probed_resources = probe_resources(catalog_search_url, resources)
-        for resource in probed_resources:
-            print(f"\nDatabase: {resource.get('Database Name')}")
-            if 'catalog_link' in resource:
-                print(f"Catalog Link: {resource['catalog_link']}")
-            else:
-                print("No catalog link found")
+        probed_resource = probe_resource(institution_config['catalog_search_url'], resource)
+        probed_resources.append(probed_resource)
+    
+    # Here you might want to save the probed_resources to a file
+    return probed_resources
 
 if __name__ == "__main__":
     main()

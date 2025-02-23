@@ -1,47 +1,50 @@
 """Functions for probing the catalog."""
 
 import urllib.parse
+import time
 from typing import Dict, List, Optional, Tuple
 import requests
 from bs4 import BeautifulSoup
 
-def probe_resources(catalog_search_url: str, resources: List[Dict]) -> List[Dict]:
-    """
-    Probe the catalog for each resource, finding and following links that match database names.
+# Constants for rate limiting
+DELAY_BETWEEN_REQUESTS = 2  # seconds between requests
+
+# Headers for requests
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+}
+
+def probe_resource(catalog_search_url: str, resource: Dict) -> Dict:
+    """Probe the catalog for a single resource.
 
     Args:
-        catalog_search_url: Base URL for catalog searches
-        resources: List of resource dictionaries containing database names
+        catalog_search_url: Base URL for the catalog search
+        resource: Dictionary containing resource information including database name and PURL
 
     Returns:
-        List of resource dictionaries with additional catalog information
+        Updated resource dictionary with catalog link and PURL link text
     """
-    results = []
-    for resource in resources:
-        result = resource.copy()
-        database_name = resource.get('Database Name')
-        purl = resource.get('PURL')
-        if not database_name:
-            continue
+    database_name = resource.get('Database Name')
+    purl = resource.get('PURL')
 
-        # Construct search URL
-        encoded_name = urllib.parse.quote(database_name)
-        search_url = f"{catalog_search_url}{encoded_name}"
+    if not database_name:
+        return resource
 
-        # First find the catalog link
-        catalog_link = find_database_link(search_url, database_name)
-        if catalog_link:
-            result['catalog_link'] = catalog_link
+    search_url = urllib.parse.urljoin(
+        catalog_search_url,
+        urllib.parse.quote(database_name)
+    )
 
-            # Then follow the catalog link to find the PURL text
-            if purl:
-                purl_link_text = find_purl_link_text(catalog_link, purl)
-                if purl_link_text:
-                    result['catalog_purl_link_text'] = purl_link_text
+    catalog_link = find_database_link(search_url, database_name)
+    if catalog_link:
+        resource['Catalog URL Link'] = catalog_link
+        if purl:
+            purl_link_text = find_purl_link_text(catalog_link, purl)
+            if purl_link_text:
+                resource['PURL Link Text'] = purl_link_text
 
-        results.append(result)
-
-    return results
+    time.sleep(DELAY_BETWEEN_REQUESTS)
+    return resource
 
 def find_database_link(search_url: str, database_name: str) -> Optional[str]:
     """
@@ -55,7 +58,7 @@ def find_database_link(search_url: str, database_name: str) -> Optional[str]:
         URL of the matching link if found, None otherwise
     """
     try:
-        response = requests.get(search_url)
+        response = requests.get(search_url, headers=HEADERS)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -83,7 +86,7 @@ def find_purl_link_text(catalog_url: str, purl: str) -> Optional[str]:
         Text of the link if found, None otherwise
     """
     try:
-        response = requests.get(catalog_url)
+        response = requests.get(catalog_url, headers=HEADERS)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, 'html.parser')
