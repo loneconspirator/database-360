@@ -55,7 +55,9 @@ class ProbeRunner:
             Dictionary containing catalog probe results
         """
         try:
-            return probe_resource(self.institution_config['catalog_search_url'], resource)
+            catalog_search_url = self.institution_config['catalog_search_url']
+            link_matcher = self.institution_config.get('valid_catalog_links_match')
+            return probe_resource(catalog_search_url, resource, link_matcher=link_matcher)
         except Exception as e:
             print(f"Error in catalog probe for {resource.get('database_name', 'Unknown')}: {e}")
             return {'error': str(e)}
