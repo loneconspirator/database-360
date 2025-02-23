@@ -24,55 +24,54 @@ def probe_resource(catalog_search_url: str, resource: Dict) -> Dict:
     Returns:
         Updated resource dictionary with catalog link and PURL link text
     """
-    database_name = resource.get('Database Name')
-    purl = resource.get('PURL')
+    database_name = resource.get('database_name')
+    purl = resource.get('purl')
+    results = {}
 
     if not database_name:
-        return resource
+        return results
 
-    search_url = urllib.parse.urljoin(
-        catalog_search_url,
-        urllib.parse.quote(database_name)
-    )
+    search_url = catalog_search_url + urllib.parse.quote(database_name)
+    print(f"Searching: {search_url}")
 
     catalog_link = find_database_link(search_url, database_name)
     if catalog_link:
-        resource['Catalog URL Link'] = catalog_link
+        results['catalog_url_link'] = catalog_link
         if purl:
             purl_link_text = find_purl_link_text(catalog_link, purl)
             if purl_link_text:
-                resource['PURL Link Text'] = purl_link_text
+                results['purl_link_text'] = purl_link_text
 
     time.sleep(DELAY_BETWEEN_REQUESTS)
-    return resource
+    return results
 
 def find_database_link(search_url: str, database_name: str) -> Optional[str]:
     """
     Search the catalog page for a link matching the database name.
 
     Args:
-        search_url: URL to search
-        database_name: Name of the database to find
+        search_url: URL to search for the database
+        database_name: Name of the database to look for
 
     Returns:
-        URL of the matching link if found, None otherwise
+        URL of the catalog entry if found, None otherwise
     """
     try:
         response = requests.get(search_url, headers=HEADERS)
         response.raise_for_status()
-
+        
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Look for links containing the database name
+        
         for link in soup.find_all('a'):
-            if database_name.lower() in link.text.lower():
+            href = link.get('href')
+            if href and database_name.lower() in link.text.lower() and '/catalog/' in href:
                 # Get the absolute URL
-                return urllib.parse.urljoin(search_url, link.get('href'))
+                print(f"Found link: {href}")
+                return urllib.parse.urljoin(search_url, href)
 
     except requests.RequestException as e:
         print(f"Error searching for {database_name}: {e}")
-
-    return None
+        return None
 
 def find_purl_link_text(catalog_url: str, purl: str) -> Optional[str]:
     """

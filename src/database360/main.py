@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from database360.config.loader import ConfigurationLoader
-from database360.probe_catalog.probe import probe_resource
+from database360.probe_runner import ProbeRunner
 
 def main():
     """Main entry point for the application."""
@@ -25,18 +25,16 @@ def main():
     for resource in resources:
         print(resource)
 
-    print("\nProbing catalog for resources...")
-    probed_resources = []
+    # Initialize and run probes
+    probe_runner = ProbeRunner(institution_config)
+    results = probe_runner.run_probes(resources)
 
-    for i, resource in enumerate(resources, 1):
-        database_name = resource.get('database_name', 'Unknown')
-        print(f"\nProcessing {i}/{len(resources)}: {database_name}")
+    print("\nProbe Results:")
+    for result in results:
+        print(result)
 
-        probed_resource = probe_resource(institution_config['catalog_search_url'], resource)
-        probed_resources.append(probed_resource)
-
-    # Here you might want to save the probed_resources to a file
-    return probed_resources
+    # Here you might want to save the results to a file
+    return results
 
 if __name__ == "__main__":
     main()
