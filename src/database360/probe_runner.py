@@ -3,6 +3,7 @@
 from typing import Dict, List
 from database360.config.loader import ConfigurationLoader
 from database360.probe_resources.probe_catalog import probe_resource
+from database360.probe_resources.probe_purl import probe_purl
 
 class ProbeRunner:
     """Manages and executes various probes on resources."""
@@ -35,10 +36,14 @@ class ProbeRunner:
             # Run catalog probe
             catalog_result = self._run_catalog_probe(resource)
 
+            # Run PURL probe
+            purl_result = self._run_purl_probe(resource)
+
             # Combine results
             resource_results = {
                 'database_name': database_name,
-                'catalog_probe': catalog_result
+                'catalog_probe': catalog_result,
+                'purl_probe': purl_result
             }
 
             self.results.append(resource_results)
@@ -61,6 +66,18 @@ class ProbeRunner:
         except Exception as e:
             print(f"Error in catalog probe for {resource.get('database_name', 'Unknown')}: {e}")
             return {'error': str(e)}
+
+    def _run_purl_probe(self, resource: Dict) -> Dict:
+        """Run the PURL probe on a single resource.
+
+        Args:
+            resource: Dictionary containing resource information
+
+        Returns:
+            Dictionary containing PURL probe results
+        """
+        print("Running PURL probe...")
+        return probe_purl(resource)
 
 def main():
     """Main entry point for the application."""
