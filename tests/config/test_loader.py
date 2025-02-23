@@ -13,9 +13,9 @@ def test_catalog_search_url_exists(config_file):
     loader = ConfigurationLoader(config_file)
     config = loader.load_institution_config()
     
-    assert 'Catalog Search URL' in config, "Configuration must contain 'Catalog Search URL' key"
-    assert config['Catalog Search URL'] is not None, "Catalog Search URL value should not be None"
-    assert config['Catalog Search URL'] == 'https://catalog.library.cornell.edu/catalog?utf8=%E2%9C%93&controller=catalog&action=index&search_field=title&q=', \
+    assert 'catalog_search_url' in config, "Configuration must contain 'catalog_search_url' key"
+    assert config['catalog_search_url'] is not None, "Catalog Search URL value should not be None"
+    assert config['catalog_search_url'] == 'https://catalog.library.cornell.edu/catalog?utf8=%E2%9C%93&controller=catalog&action=index&search_field=title&q=', \
         "Catalog Search URL should match expected value"
 
 def test_first_resource_record(config_file):
@@ -25,6 +25,6 @@ def test_first_resource_record(config_file):
     
     assert len(records) > 0, "Resources should not be empty"
     first_record = records[0]
-    assert 'Database Name' in first_record, "First record should have 'Database Name' field"
-    assert first_record['Database Name'] == 'ARTbibliographies Modern', \
+    assert 'database_name' in first_record, "First record should have 'database_name' field"
+    assert first_record['database_name'] == 'ARTbibliographies Modern', \
         "First database should be 'ARTbibliographies Modern'"
